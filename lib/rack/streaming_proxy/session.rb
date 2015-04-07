@@ -5,13 +5,15 @@ require 'rack/streaming_proxy/errors'
 
 class Rack::StreamingProxy::Session
 
+  TIMEOUT = 1800
+
   def initialize(request)
     @request = request
   end
 
   # Returns a Rack::StreamingProxy::Response
   def start
-    @piper = Servolux::Piper.new 'r', timeout: 30
+    @piper = Servolux::Piper.new 'r', timeout: TIMEOUT
     @piper.child  { child }
     @piper.parent { parent }
   end
@@ -49,6 +51,7 @@ private
 
   def perform_request
     http_session = Net::HTTP.new(@request.host, @request.port)
+    http_session.read_timeout = TIMEOUT
     http_session.use_ssl = @request.use_ssl?
 
     http_session.start do |session|
